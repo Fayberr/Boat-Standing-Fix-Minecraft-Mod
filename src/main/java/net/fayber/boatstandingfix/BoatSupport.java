@@ -1,34 +1,37 @@
 package net.fayber.boatstandingfix;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.vehicle.AbstractBoatEntity;
+import net.minecraft.util.math.Box;
 
 /**
  * Shared "is this entity standing on/right next to a boat" heuristic used by
- * both mixins.
+ * the mixin.
  *
- * Root cause recap (verified against the decompiled 26.1 server code):
- * vanilla's {@code ServerGamePacketListenerImpl.handleMovePlayer} compares the
+ * Root cause recap (verified against the decompiled 1.21.11 server code):
+ * vanilla's {@code ServerPlayNetworkHandler.onPlayerMove} compares the
  * client-reported position against the server's own recomputed position each
  * tick, and rejects (snaps back) the client's position if:
  *   1. the discrepancy exceeds a tight 0.0625 (1/4 block) squared-distance
  *      tolerance, or
  *   2. the player's new bounding box overlaps something that didn't overlap
- *      the old bounding box ("new collision").
+ *      the old bounding box ("new collision", despite the misleading vanilla
+ *      method name {@code isEntityNotCollidingWithBlocks} this also covers
+ *      entity-vs-entity collisions, via {@code CollisionView.getCollisions}).
  * A boat bobbing/drifting in water routinely produces discrepancies and
  * hitbox-overlap changes bigger than that in a single tick, purely from the
  * boat's own motion - nothing to do with the player actually moving oddly.
- * Both mixins loosen those two checks, but ONLY when the entity is
- * boat-supported, so normal anti-cheat behavior is untouched everywhere else.
+ * The mixin loosens both checks, but ONLY when the entity is boat-supported,
+ * so normal anti-cheat behavior is untouched everywhere else.
  *
- * {@code isEntityCollidingWithAnythingNew} is also called for the boat's own
- * vehicle-movement validation, with the boat itself as {@code entity}. Since
- * {@link net.minecraft.world.level.EntityGetter#getEntitiesOfClass} does not
- * exclude the query subject from its own results, a naive "any boat in this
- * box" probe would always match a boat against itself and disable that
- * validation unconditionally. {@link #isNearBoat} filters the boat itself
- * out of the query to prevent that self-match.
+ * {@code isEntityNotCollidingWithBlocks} is also called for the boat's own
+ * vehicle-movement validation ({@code onVehicleMove}), with the boat itself
+ * as {@code entity}. Unlike vanilla's own entity-collision query (which
+ * takes the subject as an explicit "except" parameter and already excludes
+ * it), a naive "any boat in this box" probe using the class-based query has
+ * no such exclusion and would always match a boat against itself. {@link
+ * #isNearBoat} filters the boat itself out of the query to prevent that
+ * self-match.
  */
 public final class BoatSupport {
     /** Generous probe box around the entity's feet; false positives here are harmless. */
@@ -39,10 +42,10 @@ public final class BoatSupport {
     }
 
     public static boolean isNearBoat(final Entity entity) {
-        if (entity == null || entity.isPassenger()) {
+        if (entity == null || entity.hasVehicle()) {
             return false;
         }
-        AABB probe = entity.getBoundingBox().inflate(HORIZONTAL_MARGIN, VERTICAL_MARGIN, HORIZONTAL_MARGIN);
-        return !entity.level().getEntitiesOfClass(AbstractBoat.class, probe, boat -> boat != entity).isEmpty();
+        Box probe = entity.getBoundingBox().expand(HORIZONTAL_MARGIN, VERTICAL_MARGIN, HORIZONTAL_MARGIN);
+        return !entity.getEntityWorld().getEntitiesByClass(AbstractBoatEntity.class, probe, boat -> boat != entity).isEmpty();
     }
 }

@@ -1,9 +1,9 @@
 {
 	"required": true,
 	"package": "net.fayber.boatstandingfix.mixin",
-	"compatibilityLevel": "JAVA_25",
+	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ServerGamePacketListenerImplMixin"
+		"ServerPlayNetworkHandlerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

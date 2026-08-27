@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
  * Entrypoint for Boat Standing Fix.
  *
  * All the actual behavior change is server-side, in
- * {@link net.fayber.boatstandingfix.mixin.ServerGamePacketListenerImplMixin}:
+ * {@link net.fayber.boatstandingfix.mixin.ServerPlayNetworkHandlerMixin}:
  * it stops the "moved wrongly" movement-tolerance check and the
  * new-collision check from rubber-banding a player standing on a
  * moving/bobbing boat (MC-156980's root cause: those checks don't account
