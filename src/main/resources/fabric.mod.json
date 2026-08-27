@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "boat_standing_fix",
+	"version": "${version}",
+	"name": "Boat Standing Fix",
+	"description": "Fixes the vanilla bug where standing on a boat in water causes stuttering movement, rubber-banding, being pushed/launched, or getting stuck (MC-156980 / MC-136367). Server-side behavior, no new blocks or items.",
+	"authors": [
+		"Fayber"
+	],
+	"contact": {
+		"homepage": "https://github.com/Fayberr/Boat-Standing-Fix-Minecraft-Mod",
+		"sources": "https://github.com/Fayberr/Boat-Standing-Fix-Minecraft-Mod"
+	},
+	"license": "GPL-3.0-or-later",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.fayber.boatstandingfix.BoatStandingFix"
+		]
+	},
+	"mixins": [
+		"boat_standing_fix.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=${loader_version}",
+		"minecraft": ">=26.1 <26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
