@@ -12,6 +12,7 @@
 		"sources": "https://github.com/Fayberr/Boat-Standing-Fix-Minecraft-Mod"
 	},
 	"license": "GPL-3.0-or-later",
+	"icon": "assets/boat_standing_fix/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
