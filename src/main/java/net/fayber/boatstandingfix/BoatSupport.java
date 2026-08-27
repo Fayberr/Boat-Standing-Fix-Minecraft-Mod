@@ -5,30 +5,12 @@ import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
 import net.minecraft.world.phys.AABB;
 
 /**
- * Shared "is this entity standing on/right next to a boat" heuristic used by
- * both mixins.
+ * "Is this entity standing on/near a boat" check shared by both mixins.
  *
- * Root cause recap (verified against the decompiled 26.1 server code):
- * vanilla's {@code ServerGamePacketListenerImpl.handleMovePlayer} compares the
- * client-reported position against the server's own recomputed position each
- * tick, and rejects (snaps back) the client's position if:
- *   1. the discrepancy exceeds a tight 0.0625 (1/4 block) squared-distance
- *      tolerance, or
- *   2. the player's new bounding box overlaps something that didn't overlap
- *      the old bounding box ("new collision").
- * A boat bobbing/drifting in water routinely produces discrepancies and
- * hitbox-overlap changes bigger than that in a single tick, purely from the
- * boat's own motion - nothing to do with the player actually moving oddly.
- * Both mixins loosen those two checks, but ONLY when the entity is
- * boat-supported, so normal anti-cheat behavior is untouched everywhere else.
- *
- * {@code isEntityCollidingWithAnythingNew} is also called for the boat's own
- * vehicle-movement validation, with the boat itself as {@code entity}. Since
- * {@link net.minecraft.world.level.EntityGetter#getEntitiesOfClass} does not
- * exclude the query subject from its own results, a naive "any boat in this
- * box" probe would always match a boat against itself and disable that
- * validation unconditionally. {@link #isNearBoat} filters the boat itself
- * out of the query to prevent that self-match.
+ * The same query also runs for a boat's own vehicle-movement validation
+ * (boat as the entity), so we exclude the boat itself - the class-based
+ * entity query has no built-in self-exclusion like vanilla's except-param
+ * queries do.
  */
 public final class BoatSupport {
     /** Generous probe box around the entity's feet; false positives here are harmless. */
