@@ -1,6 +1,6 @@
 # Boat Standing Fix
 
-Fabric mod for Minecraft **26.1 / 26.1.1 / 26.1.2** (one jar covers all three).
+Fabric mod for Minecraft **26.2**.
 
 Fixes the long-standing vanilla bug where standing on top of a boat floating
 in water causes stuttering movement, rubber-banding, being pushed or
@@ -38,11 +38,13 @@ only when the moving entity is within a small probe box of an `AbstractBoat`
 (see `BoatSupport`), so ordinary anti-cheat movement validation is untouched
 everywhere else.
 
-Verified via `javap`/decompiling the actual 26.1/26.1.1/26.1.2 merged server
-jars (Mojang ships these unobfuscated with full debug info) rather than
-assumed from older-version fix mods - both mixin targets (the method
-signature and the `0.0625` constant) are byte-identical across all three
-patch versions.
+Verified via `javap`/decompiling the actual 26.1 and 26.2 merged server jars
+(Mojang ships these unobfuscated with full debug info) rather than assumed
+from older-version fix mods - both mixin targets (the method signature and
+the `0.0625` constant) are byte-identical between 26.1.x and 26.2, and
+`AbstractBoat` stays in the same package
+(`net.minecraft.world.entity.vehicle.boat`), so no source changes were
+needed to port this build from 26.1.x, only the target Minecraft version.
 
 ## Building
 

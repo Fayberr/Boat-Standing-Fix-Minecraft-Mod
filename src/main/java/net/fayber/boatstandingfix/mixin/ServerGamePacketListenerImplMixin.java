@@ -42,14 +42,18 @@ public abstract class ServerGamePacketListenerImplMixin {
     }
 
     /**
-     * Whether the player's new bounding box overlaps something that did not
-     * overlap the old bounding box. A boat shifting under the player counts
-     * as a "new" overlap every time it drifts, which alone is enough to
-     * reject the movement even if the tolerance check above passes. Skip
-     * that specifically for boat-supported entities; the boat's own vehicle
-     * movement handling (a different call site of this same method) is
-     * untouched because {@code entity} there is the boat itself, not a
-     * player standing on one.
+     * Whether the entity's new bounding box overlaps something that did not
+     * overlap the old bounding box. A boat shifting under a player standing
+     * on it counts as a "new" overlap every time it drifts, which alone is
+     * enough to reject the movement even if the tolerance check above
+     * passes. Skip that specifically when {@link BoatSupport#isNearBoat}
+     * says so.
+     *
+     * This method is also called for the boat's own vehicle-movement
+     * validation, with {@code entity} being the boat itself. See
+     * {@link BoatSupport}'s class javadoc for how that call site stays
+     * unaffected (self-match exclusion), so this fix doesn't accidentally
+     * disable that check too.
      */
     @Inject(
         method = "isEntityCollidingWithAnythingNew(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;DDD)Z",

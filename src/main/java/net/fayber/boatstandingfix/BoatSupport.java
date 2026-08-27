@@ -19,8 +19,16 @@ import net.minecraft.world.phys.AABB;
  * A boat bobbing/drifting in water routinely produces discrepancies and
  * hitbox-overlap changes bigger than that in a single tick, purely from the
  * boat's own motion - nothing to do with the player actually moving oddly.
- * Both mixins loosen those two checks, but ONLY when the player is
+ * Both mixins loosen those two checks, but ONLY when the entity is
  * boat-supported, so normal anti-cheat behavior is untouched everywhere else.
+ *
+ * {@code isEntityCollidingWithAnythingNew} is also called for the boat's own
+ * vehicle-movement validation, with the boat itself as {@code entity}. Since
+ * {@link net.minecraft.world.level.EntityGetter#getEntitiesOfClass} does not
+ * exclude the query subject from its own results, a naive "any boat in this
+ * box" probe would always match a boat against itself and disable that
+ * validation unconditionally. {@link #isNearBoat} filters the boat itself
+ * out of the query to prevent that self-match.
  */
 public final class BoatSupport {
     /** Generous probe box around the entity's feet; false positives here are harmless. */
@@ -35,6 +43,6 @@ public final class BoatSupport {
             return false;
         }
         AABB probe = entity.getBoundingBox().inflate(HORIZONTAL_MARGIN, VERTICAL_MARGIN, HORIZONTAL_MARGIN);
-        return !entity.level().getEntitiesOfClass(AbstractBoat.class, probe).isEmpty();
+        return !entity.level().getEntitiesOfClass(AbstractBoat.class, probe, boat -> boat != entity).isEmpty();
     }
 }
