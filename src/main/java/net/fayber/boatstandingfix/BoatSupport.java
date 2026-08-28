@@ -4,17 +4,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.vehicle.AbstractBoatEntity;
 import net.minecraft.util.math.Box;
 
-/**
- * "Is this entity standing on/near a boat" check used by the mixin.
- *
- * The same query also runs for a boat's own vehicle-movement validation
- * (boat as the entity), so we exclude the boat itself - the class-based
- * entity query has no built-in self-exclusion like vanilla's except-param
- * queries do. Note: {@code isEntityNotCollidingWithBlocks} covers entity
- * collisions too despite the name (see README).
- */
+// checks if a player is standing on top of a boat, used by the mixin to decide when to relax
+// movement checks. also runs for a boat's own vehicle-movement validation (boat as the entity),
+// so we exclude the boat itself from the query - it has no self-exclusion built in like vanilla's
+// except-param queries do. note: isEntityNotCollidingWithBlocks covers entity collisions too
+// despite the name, that's why the mixin injects into it
 public final class BoatSupport {
-    /** Generous probe box around the entity's feet; false positives here are harmless. */
     private static final double HORIZONTAL_MARGIN = 0.3;
     private static final double VERTICAL_MARGIN = 0.5;
 
@@ -25,7 +20,14 @@ public final class BoatSupport {
         if (entity == null || entity.hasVehicle()) {
             return false;
         }
-        Box probe = entity.getBoundingBox().expand(HORIZONTAL_MARGIN, VERTICAL_MARGIN, HORIZONTAL_MARGIN);
+        Box feet = entity.getBoundingBox();
+        // only look in a thin slab right under the feet, not a bubble around the whole entity -
+        // a boat has to actually be under the player for this to count. otherwise a boat just
+        // sitting next to someone on land would trip the same relaxed movement checks
+        Box probe = new Box(
+            feet.minX - HORIZONTAL_MARGIN, feet.minY - VERTICAL_MARGIN, feet.minZ - HORIZONTAL_MARGIN,
+            feet.maxX + HORIZONTAL_MARGIN, feet.minY + 0.1, feet.maxZ + HORIZONTAL_MARGIN
+        );
         return !entity.getEntityWorld().getEntitiesByClass(AbstractBoatEntity.class, probe, boat -> boat != entity).isEmpty();
     }
 }
