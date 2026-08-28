@@ -12,16 +12,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * Fixes MC-156980: standing on a boat in water stutters, rubber-bands, or
- * launches the player. Both checks below are loosened only when
- * {@link BoatSupport#isNearBoat} is true, so normal movement anti-cheat is
- * untouched otherwise.
- */
+// fixes MC-156980 - standing on a floating boat stutters, rubber-bands, or launches the player
+// because vanilla's movement checks don't expect the ground under you to bob around. both
+// tweaks below only kick in when BoatSupport.isNearBoat is true, so normal anti-cheat is
+// untouched for everyone else
 @Mixin(ServerGamePacketListenerImpl.class)
 public abstract class ServerGamePacketListenerImplMixin {
 
-    /** 0.0625 = quarter-block "moved wrongly" tolerance a bobbing boat blows through every tick. */
+    // 0.0625 is the squared-distance tolerance vanilla uses to flag "moved wrongly" - a boat
+    // bobbing under your feet blows through that every tick, so bump it up just for that case
     @ModifyConstant(
         method = "handleMovePlayer(Lnet/minecraft/network/protocol/game/ServerboundMovePlayerPacket;)V",
         constant = @Constant(doubleValue = 0.0625D)
@@ -31,7 +30,8 @@ public abstract class ServerGamePacketListenerImplMixin {
         return BoatSupport.isNearBoat(self.player) ? 4.0D : original;
     }
 
-    /** A boat's own hitbox shift counts as a "new" collision every tick it drifts; skip that check when boat-supported. */
+    // a boat's hitbox shifting as it drifts looks like a "new" collision every tick, which
+    // fights the player standing on it - skip that check for the same boat-standing case
     @Inject(
         method = "isEntityCollidingWithAnythingNew(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;DDD)Z",
         at = @At("HEAD"),
